@@ -3,43 +3,40 @@ import math
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 dataPath = "./data.txt"
-houseData = [[0]* 4 for i in range(47)]
-trainData_std = [[0]* 2 for i in range(47)]
 numberOfData = 47
-coefficients = []
-iterations = 300000
+iterations = 3000
+houseData = [[0]* 3 for i in range(numberOfData)]
 housePrice = np.ones(numberOfData)
-trainData= [[0]* 2 for i in range(47)]
+coefficients = np.ones((1,3))
 
 def main():
     read_data()
     cost,i = gradient_descent()
     plot_cost(cost,i)
 def read_data():
-    global houseData, trainData_std, housePrice,trainData
+    global houseData, housePrice
     with open(dataPath) as f:
         data = f.readlines()
     for row in range(numberOfData):
-        houseData[row] = data[row].replace("\n","").split(',')
+        data[row] = data[row].replace("\n","").split(',')
     for row in range(numberOfData):
         for col in range(2):
-            trainData[row][col] = float(houseData[row][col])
-        housePrice[row] = houseData[row][2]
+            houseData[row][col] = float(data[row][col])
+        housePrice[row] = float(data[row][2])
     
-    trainData = np.asarray(trainData)
+    houseData = np.asarray(houseData)
     
-    scaler = StandardScaler().fit(trainData)
-    trainData_std = scaler.transform(trainData)
-    trainData_std = np.insert(trainData_std, 0, values=1.0, axis=1)
-    trainData = np.insert(trainData, 0, values=1.0, axis=1)
+    scaler = StandardScaler().fit(houseData)
+    houseData = scaler.transform(houseData)
+    houseData = np.insert(houseData, 0, values=1.0, axis=1)
     
-    # print(trainData_std)
 
-def h_func(coefficients):
-    h = np.zeros(numberOfData, dtype= float)
-    for row in range(numberOfData):
+
+def h_func(coefficients,data):
+    h = np.zeros(data.shape[0], dtype= float)
+    for row in range(data.shape[0]):
         for col in range(3):
-            h[row] = h[row] + (trainData_std[row][col]*coefficients[0][col])
+            h[row] = h[row] + (data[row][col]*coefficients[0][col])
     # print(h)
     return h
             
@@ -48,10 +45,7 @@ def gradient_descent():
     #initial coefficients randomly
     global coefficients
     coefficients = np.random.randn(1,3)
-    # print(coefficients)
-    # h = h_func(coefficients)
-    # print("h = "+ str(h))
-    newW = np.zeros(3)
+    newCoeff = np.zeros(3)
     costD = 1.0
     cost =np.empty(iterations,dtype=float)
     i=0
@@ -59,23 +53,23 @@ def gradient_descent():
     # coefficients_history =np.zeros((iterations,2))
     while wChanges>=0.001:
         # print(coefficients)
-        h = h_func(coefficients)
+        h = h_func(coefficients,houseData)
         print(h)
         for col in range(3):
             costD =0.0
             for row in range(numberOfData):
-                costD = costD +(( h[row] - housePrice[row])*trainData_std[row][col])
+                costD = costD +(( h[row] - housePrice[row])*houseData[row][col])
                 cost[i] = cost[i] + ( h[row] - housePrice[row])*( h[row] - housePrice[row])
             costD = costD/(numberOfData)
             # print(costD)
             cost[i] = cost[i]/ (2*numberOfData)
-            newW[col] = coefficients[0][col] - alpha* costD
+            newCoeff[col] = coefficients[0][col] - alpha* costD
 
-        wChanges = math.sqrt(pow(newW[0] - coefficients[0][0],2) +  pow(newW[1] - coefficients[0][1],2) +  pow(newW[2] - coefficients[0][2],2))
+        wChanges = math.sqrt(pow(newCoeff[0] - coefficients[0][0],2) +  pow(newCoeff[1] - coefficients[0][1],2) +  pow(newCoeff[2] - coefficients[0][2],2))
         # print(wChanges)
-        coefficients[0][0] = newW[0]
-        coefficients[0][1] = newW[1]
-        coefficients[0][2] = newW[2]
+        coefficients[0][0] = newCoeff[0]
+        coefficients[0][1] = newCoeff[1]
+        coefficients[0][2] = newCoeff[2]
         
         i=i+1
     
