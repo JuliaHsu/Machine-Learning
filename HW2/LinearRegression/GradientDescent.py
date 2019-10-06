@@ -39,7 +39,16 @@ def h_func(coefficients,data):
             h[row] = h[row] + (data[row][col]*coefficients[0][col])
     # print(h)
     return h
-            
+
+def getCost(h_price, true_price):
+    cost =0.0
+    for row in range(h_price.shape[0]):
+        cost = cost+ pow((h_price[row]- true_price[row]),2)
+    
+    cost = cost/(2*h_price.shape[0])
+    # print(cost)
+    return cost
+
 def gradient_descent():
     alpha = 0.01
     #initial coefficients randomly
@@ -47,22 +56,22 @@ def gradient_descent():
     coefficients = np.random.randn(1,3)
     newCoeff = np.zeros(3)
     costD = 1.0
-    cost =np.empty(iterations,dtype=float)
+    cost =np.zeros(iterations,dtype=float)
     i=0
     wChanges=1.0
     # coefficients_history =np.zeros((iterations,2))
     while wChanges>=0.001:
         # print(coefficients)
         h = h_func(coefficients,houseData)
-        print(h)
+        # print(h)
         for col in range(3):
             costD =0.0
             for row in range(numberOfData):
                 costD = costD +(( h[row] - housePrice[row])*houseData[row][col])
-                cost[i] = cost[i] + ( h[row] - housePrice[row])*( h[row] - housePrice[row])
+                # cost[i] = cost[i] + ( h[row] - housePrice[row])*( h[row] - housePrice[row])
             costD = costD/(numberOfData)
             # print(costD)
-            cost[i] = cost[i]/ (2*numberOfData)
+            # cost[i] = cost[i]/ (2*numberOfData)
             newCoeff[col] = coefficients[0][col] - alpha* costD
 
         wChanges = math.sqrt(pow(newCoeff[0] - coefficients[0][0],2) +  pow(newCoeff[1] - coefficients[0][1],2) +  pow(newCoeff[2] - coefficients[0][2],2))
@@ -71,9 +80,12 @@ def gradient_descent():
         coefficients[0][1] = newCoeff[1]
         coefficients[0][2] = newCoeff[2]
         
+        cost[i] = getCost(h,housePrice)
         i=i+1
-    
     print(cost[:i])
+    print(coefficients)
+    cost_train = getCost(h,housePrice)
+    print("cost train: "+ str(cost_train))
     print(i)
     return cost,i
 def plot_cost(cost,i):

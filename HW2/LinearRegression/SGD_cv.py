@@ -3,15 +3,16 @@ import math
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+from sklearn.utils import shuffle
 dataPath = "./data.txt"
 
 #constants
 numberOfData = 47
 train_size = 31
 test_size = 16
-iterations = 3000
+iterations = 30
 # data
-houseData = [[0]* 2 for i in range(numberOfData)]
+houseData = np.zeros((numberOfData,2))
 housePrice = np.ones(numberOfData)
 coefficients = np.ones((1,3))
 trainData= [[0]* 2 for i in range(train_size)]
@@ -21,7 +22,7 @@ price_test = np.ones(test_size)
 
 def main():
     read_data()
-    cost,i = gradient_descent()
+    cost,i = stochastic_gradient_descent()
     plot_cost(cost,i)
     cost_test = linearRegression(coefficients,testData)
 def read_data():
@@ -30,7 +31,7 @@ def read_data():
         data = f.readlines()
     for row in range(numberOfData):
         data[row] = data[row].replace("\n","").split(',')
-
+    data = np.asarray(data)
     for row in range(numberOfData):
         for col in range(2):
             houseData[row][col] = float(data[row][col])
@@ -53,6 +54,7 @@ def h_func(coefficients, data):
             h[row] = h[row] + (data[row][col]*coefficients[0][col])
     return h
 
+
 def getCost(h_price, true_price):
     cost =0.0
     for row in range(h_price.shape[0]):
@@ -63,10 +65,10 @@ def getCost(h_price, true_price):
     return cost
     
             
-def gradient_descent():
+def stochastic_gradient_descent():
     alpha = 0.01
     #initial coefficients randomly
-    global coefficients
+    global coefficients, trainData, price_train
     coefficients = np.random.randn(1,3)
     newCoeff = np.zeros(3)
     costD = 1.0
@@ -74,36 +76,41 @@ def gradient_descent():
     i=0
     wChanges=1.0
     h = np.zeros(train_size, dtype= float)
-    # coefficients_history =np.zeros((iterations,2))
-    while wChanges>=0.001:
-        # print(coefficients)
-        h = h_func(coefficients,trainData)
-        # print(h)
-        for col in range(3):
-            costD =0.0
-            for row in range(train_size):
-                costD = costD +(( h[row] - price_train[row])*trainData[row][col])
+    predict = np.zeros(train_size, dtype= float)
+    # coefficients_history =np.zeros((iterations,2)
 
-            costD = costD/(train_size)
+    while i<iterations:
+        # print(coefficients)
+        trainData, price_train = shuffle(trainData, price_train)
+        # print(trainData)
+        # print(price_train)
+        # print(h)
+        for row in range(train_size):
+            h = h_func(coefficients,trainData)
+            for col in range(3):
+                costD = (( h[row] - price_train[row])*trainData[row][col])
+                coefficients[0][col] = coefficients[0][col] - alpha* costD
+            # coefficients[0][0] = newCoeff[0]
+            # coefficients[0][1] = newCoeff[1]
+            # coefficients[0][2] = newCoeff[2]
             # print(costD)
-            newCoeff[col] = coefficients[0][col] - alpha* costD
+        predict = h_func(coefficients,trainData)
+        for row in range(train_size):
+            cost[i] =cost[i]+ pow( predict[row] - price_train[row],2)
+        cost[i] = cost[i]/ (2*train_size)
+            
 
         wChanges = math.sqrt(pow(newCoeff[0] - coefficients[0][0],2) +  pow(newCoeff[1] - coefficients[0][1],2) +  pow(newCoeff[2] - coefficients[0][2],2))
         # print(wChanges)
-        coefficients[0][0] = newCoeff[0]
-        coefficients[0][1] = newCoeff[1]
-        coefficients[0][2] = newCoeff[2]
-        cost[i] = getCost(h,price_train)
+       
+        
         i=i+1
     
-    # print(cost[:i])
-    
-    
-    cost_train = getCost(h,price_train)
-    
-    print(coefficients)
+    print(cost[:i])
+    # print(i)
+    # print(coefficients)
+    cost_train = getCost(predict,price_train)
     print("cost train: "+ str(cost_train))
-    print(i)
     return cost,i
 
 def linearRegression(coefficients,data):
@@ -119,10 +126,12 @@ def linearRegression(coefficients,data):
 
 def plot_cost(cost,i):
     plt.figure(figsize=(12,8))
-    plt.plot(range(i), cost[:i],'b.')
+    x_ticks = np.arange(1, i+1, 1)
+    plt.xticks(x_ticks)
+    plt.plot(range(1,i+1), cost[:i],'b.')
     plt.xlabel("Iterations")
     plt.ylabel("J(Theta)")
-    plt.savefig("GD_cv_cost")
+    plt.savefig("SGD_cv_cost")
 main()
 
 
