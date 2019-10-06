@@ -11,8 +11,14 @@ coefficients = np.ones((1,3))
 
 def main():
     read_data()
-    cost,i = gradient_descent()
+    cost,i, cost_train = gradient_descent()
+    Erms_train = getErms(cost_train, numberOfData)
     plot_cost(cost,i)
+    print("number of iterations: "+ str(i))
+    print("coefficients: "+ str(coefficients))
+    print("cost train: "+ str(cost_train))
+    print("Erms train: "+ str(Erms_train))
+
 def read_data():
     global houseData, housePrice
     with open(dataPath) as f:
@@ -48,6 +54,9 @@ def getCost(h_price, true_price):
     cost = cost/(2*h_price.shape[0])
     # print(cost)
     return cost
+def getErms(cost,data_size):
+    Erms = math.sqrt(2*cost/(data_size))
+    return Erms
 
 def gradient_descent():
     alpha = 0.01
@@ -59,23 +68,17 @@ def gradient_descent():
     cost =np.zeros(iterations,dtype=float)
     i=0
     wChanges=1.0
-    # coefficients_history =np.zeros((iterations,2))
+    
     while wChanges>=0.001:
-        # print(coefficients)
         h = h_func(coefficients,houseData)
-        # print(h)
         for col in range(3):
             costD =0.0
             for row in range(numberOfData):
                 costD = costD +(( h[row] - housePrice[row])*houseData[row][col])
-                # cost[i] = cost[i] + ( h[row] - housePrice[row])*( h[row] - housePrice[row])
             costD = costD/(numberOfData)
-            # print(costD)
-            # cost[i] = cost[i]/ (2*numberOfData)
             newCoeff[col] = coefficients[0][col] - alpha* costD
 
         wChanges = math.sqrt(pow(newCoeff[0] - coefficients[0][0],2) +  pow(newCoeff[1] - coefficients[0][1],2) +  pow(newCoeff[2] - coefficients[0][2],2))
-        # print(wChanges)
         coefficients[0][0] = newCoeff[0]
         coefficients[0][1] = newCoeff[1]
         coefficients[0][2] = newCoeff[2]
@@ -83,11 +86,9 @@ def gradient_descent():
         cost[i] = getCost(h,housePrice)
         i=i+1
     print(cost[:i])
-    print(coefficients)
     cost_train = getCost(h,housePrice)
-    print("cost train: "+ str(cost_train))
-    print(i)
-    return cost,i
+    return cost,i, cost_train
+    
 def plot_cost(cost,i):
     plt.figure(figsize=(12,8))
     plt.plot(range(i), cost[:i],'b.')

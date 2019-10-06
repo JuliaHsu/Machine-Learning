@@ -19,8 +19,14 @@ coefficients = np.ones((1,3))
 
 def main():
     read_data()
-    cost,i = stochastic_gradient_descent()
+    cost,i, cost_train = stochastic_gradient_descent()
+    Erms_train = getErms(cost_train, numberOfData)
     plot_cost(cost,i)
+    print("number of iterations: "+ str(i))
+    print("coefficients: "+ str(coefficients))
+    print("cost train: "+ str(cost_train))
+    print("Erms train: "+ str(Erms_train))
+
 def read_data():
     global houseData, housePrice
     with open(dataPath) as f:
@@ -33,7 +39,6 @@ def read_data():
             houseData[row][col] = float(data[row][col])
         housePrice[row] = float(data[row][2])
     
-    # trainData, testData, price_train, price_test = train_test_split(houseData,housePrice,test_size=0.33,random_state = 42)
     houseData = np.asarray(houseData)
     
     scaler = StandardScaler().fit(houseData)
@@ -57,7 +62,10 @@ def getCost(h_price, true_price):
     cost = cost/(2*h_price.shape[0])
     # print(cost)
     return cost
-    
+
+def getErms(cost,data_size):
+    Erms = math.sqrt(2*cost/(data_size))
+    return Erms
             
 def stochastic_gradient_descent():
     alpha = 0.01
@@ -68,31 +76,26 @@ def stochastic_gradient_descent():
     cost =np.zeros(iterations,dtype=float)
     i=0
     h = np.zeros(train_size, dtype= float)
-    predict = np.zeros(train_size, dtype= float)
-    # coefficients_history =np.zeros((iterations,2)
 
     while i<iterations:
+         # shuffle data
         houseData, housePrice = shuffle(houseData, housePrice)
+        h = h_func(coefficients,houseData)
         for row in range(numberOfData):
-            h = h_func(coefficients,houseData)
             for col in range(3):
                 costD = (( h[row] - housePrice[row])*houseData[row][col])
                 coefficients[0][col] = coefficients[0][col] - alpha* costD
-
-        predict = h_func(coefficients,houseData)
+            h = h_func(coefficients,houseData)
+    
         for row in range(numberOfData):
-            cost[i] =cost[i]+ pow( predict[row] - housePrice[row],2)
+            cost[i] =cost[i]+ pow( h[row] - housePrice[row],2)
         cost[i] = cost[i]/ (2*numberOfData)
        
-        
         i=i+1
     
     print(cost[:i])
-    # print(i)
-    # print(coefficients)
-    cost_train = getCost(predict,housePrice)
-    print("cost train: "+ str(cost_train))
-    return cost,i
+    cost_train = getCost(h,housePrice)
+    return cost,i, cost_train
 
 # def linearRegression(coefficients,data):
 #     predict_price = h_func(coefficients, data)

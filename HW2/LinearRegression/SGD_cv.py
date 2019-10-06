@@ -22,9 +22,18 @@ price_test = np.ones(test_size)
 
 def main():
     read_data()
-    cost,i = stochastic_gradient_descent()
-    plot_cost(cost,i)
+    cost,i, cost_train = stochastic_gradient_descent()
     cost_test = linearRegression(coefficients,testData)
+    Erms_train = getErms(cost_train, train_size)
+    Erms_test = getErms(cost_test, test_size)
+    plot_cost(cost,i)
+    print("number of iterations: "+ str(i))
+    print("coefficients: "+ str(coefficients))
+    print("cost train: "+ str(cost_train))
+    print("cost test: " + str(cost_test))
+    print("Erms train: "+ str(Erms_train))
+    print("Erms test: "+ str(Erms_test))
+
 def read_data():
     global houseData, housePrice,trainData,testData,price_train, price_test
     with open(dataPath) as f:
@@ -63,6 +72,10 @@ def getCost(h_price, true_price):
     cost = cost/(2*h_price.shape[0])
     # print(cost)
     return cost
+
+def getErms(cost,data_size):
+    Erms = math.sqrt(2*cost/(data_size))
+    return Erms
     
             
 def stochastic_gradient_descent():
@@ -70,37 +83,28 @@ def stochastic_gradient_descent():
     #initial coefficients randomly
     global coefficients, trainData, price_train
     coefficients = np.random.randn(1,3)
-    newCoeff = np.zeros(3)
     costD = 1.0
     cost =np.zeros(iterations,dtype=float)
     i=0
-    wChanges=1.0
     h = np.zeros(train_size, dtype= float)
-    predict = np.zeros(train_size, dtype= float)
     # coefficients_history =np.zeros((iterations,2)
 
     while i<iterations:
-        # print(coefficients)
+        # shuffle data
         trainData, price_train = shuffle(trainData, price_train)
-        # print(trainData)
-        # print(price_train)
-        # print(h)
+        h = h_func(coefficients,trainData)
         for row in range(train_size):
-            h = h_func(coefficients,trainData)
             for col in range(3):
                 costD = (( h[row] - price_train[row])*trainData[row][col])
                 coefficients[0][col] = coefficients[0][col] - alpha* costD
-            # coefficients[0][0] = newCoeff[0]
-            # coefficients[0][1] = newCoeff[1]
-            # coefficients[0][2] = newCoeff[2]
-            # print(costD)
-        predict = h_func(coefficients,trainData)
+            h = h_func(coefficients,trainData)
+
         for row in range(train_size):
-            cost[i] =cost[i]+ pow( predict[row] - price_train[row],2)
+            cost[i] =cost[i]+ pow( h[row] - price_train[row],2)
         cost[i] = cost[i]/ (2*train_size)
             
 
-        wChanges = math.sqrt(pow(newCoeff[0] - coefficients[0][0],2) +  pow(newCoeff[1] - coefficients[0][1],2) +  pow(newCoeff[2] - coefficients[0][2],2))
+        # wChanges = math.sqrt(pow(newCoeff[0] - coefficients[0][0],2) +  pow(newCoeff[1] - coefficients[0][1],2) +  pow(newCoeff[2] - coefficients[0][2],2))
         # print(wChanges)
        
         
@@ -109,9 +113,8 @@ def stochastic_gradient_descent():
     print(cost[:i])
     # print(i)
     # print(coefficients)
-    cost_train = getCost(predict,price_train)
-    print("cost train: "+ str(cost_train))
-    return cost,i
+    cost_train = getCost(h,price_train)
+    return cost,i, cost_train
 
 def linearRegression(coefficients,data):
     predict_price = h_func(coefficients, data)

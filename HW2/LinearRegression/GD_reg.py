@@ -12,8 +12,13 @@ reg = 0.05
 
 def main():
     read_data()
-    cost,i = gradient_descent()
+    cost,i,cost_train = gradient_descent_reg()
+    Erms_train = getErms(cost_train, numberOfData)
     plot_cost(cost,i)
+    print("number of iterations: "+ str(i))
+    print("coefficients: "+ str(coefficients))
+    print("cost train: "+ str(cost_train))
+    print("Erms train: "+ str(Erms_train))
 def read_data():
     global houseData, housePrice
     with open(dataPath) as f:
@@ -53,8 +58,12 @@ def getCost(h_price, true_price):
     cost = (cost + (reg * sumTheta))/(2*h_price.shape[0])
     # print(cost)
     return cost
+
+def getErms(cost,data_size):
+    Erms = math.sqrt(2*cost/(data_size))
+    return Erms
             
-def gradient_descent():
+def gradient_descent_reg():
     alpha = 0.01
     #initial coefficients randomly
     global coefficients
@@ -64,7 +73,6 @@ def gradient_descent():
     cost =np.zeros(iterations,dtype=float)
     i=0
     wChanges=1.0
-    sumTheta = 0.0
     # coefficients_history =np.zeros((iterations,2))
     while wChanges>=0.001:
         # print(coefficients)
@@ -94,11 +102,9 @@ def gradient_descent():
         i=i+1
     
     print(cost[:i])
-    print(coefficients)
     cost_train = getCost(h,housePrice)
-    print("cost train: "+ str(cost_train))
-    print(i)
-    return cost,i
+    return cost,i, cost_train
+
 def plot_cost(cost,i):
     plt.figure(figsize=(12,8))
     plt.plot(range(i), cost[:i],'b.')

@@ -21,9 +21,18 @@ price_test = np.ones(test_size)
 
 def main():
     read_data()
-    cost,i = gradient_descent()
-    plot_cost(cost,i)
+    cost_i, i, cost_train = gradient_descent()
+    plot_cost(cost_i,i)
     cost_test = linearRegression(coefficients,testData)
+    Erms_train = getErms(cost_train, train_size)
+    Erms_test = getErms(cost_test, test_size)
+    print("number of iterations: "+ str(i))
+    print("coefficients: "+ str(coefficients))
+    print("cost train: "+ str(cost_train))
+    print("cost test: " + str(cost_test))
+    print("Erms train: "+ str(Erms_train))
+    print("Erms test: "+ str(Erms_test))
+    
 def read_data():
     global houseData, housePrice,trainData,testData,price_train, price_test
     with open(dataPath) as f:
@@ -61,6 +70,10 @@ def getCost(h_price, true_price):
     cost = cost/(2*h_price.shape[0])
     # print(cost)
     return cost
+
+def getErms(cost,data_size):
+    Erms = math.sqrt(2*cost/(data_size))
+    return Erms
     
             
 def gradient_descent():
@@ -101,20 +114,13 @@ def gradient_descent():
     
     cost_train = getCost(h,price_train)
     
-    print(coefficients)
-    print("cost train: "+ str(cost_train))
-    print(i)
-    return cost,i
+
+    return cost,i, cost_train
 
 def linearRegression(coefficients,data):
     predict_price = h_func(coefficients, data)
     cost_test = getCost(predict_price,price_test)
-    print("cost test: " + str(cost_test))
     return cost_test
-
-    
-
-
 
 
 def plot_cost(cost,i):
